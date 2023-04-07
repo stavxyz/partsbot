@@ -1,15 +1,15 @@
 import rhino3dm
 
-def create_rectangular_plan(length, width, height):
+def create_wall(start_point, end_point, wall_thickness, wall_height):
     points = [
-        rhino3dm.Point3d(0, 0, height),
-        rhino3dm.Point3d(length, 0, height),
-        rhino3dm.Point3d(length, width, height),
-        rhino3dm.Point3d(0, width, height),
-        rhino3dm.Point3d(0, 0, height)
+        start_point,
+        end_point,
+        rhino3dm.Point3d(end_point.X, end_point.Y - wall_thickness, 0),
+        rhino3dm.Point3d(start_point.X, start_point.Y - wall_thickness, 0),
+        start_point
     ]
     polyline = rhino3dm.Polyline(points)
-    return polyline
+    return rhino3dm.Extrusion.Create(polyline.ToPolylineCurve(), wall_height, True)
 
 model = rhino3dm.File3dm()
 
@@ -19,19 +19,24 @@ house_wall_height = 12
 loft_height = 6
 wall_thickness = 2
 
-# Create exterior walls
-exterior_walls = create_rectangular_plan(house_length, house_width, 0)
-exterior_wall_extrusion = rhino3dm.Extrusion.Create(exterior_walls.ToPolylineCurve(), house_wall_height, True)
-model.Objects.AddExtrusion(exterior_wall_extrusion)
+# Create walls
+wall_1 = create_wall(rhino3dm.Point3d(0, house_width, 0), rhino3dm.Point3d(house_length, house_width, 0), wall_thickness, house_wall_height)
+wall_2 = create_wall(rhino3dm.Point3d(house_length, house_width, 0), rhino3dm.Point3d(house_length, 0, 0), wall_thickness, house_wall_height)
+wall_3 = create_wall(rhino3dm.Point3d(house_length, 0, 0), rhino3dm.Point3d(0, 0, 0), wall_thickness, house_wall_height)
+wall_4 = create_wall(rhino3dm.Point3d(0, 0, 0), rhino3dm.Point3d(0, house_width, 0), wall_thickness, house_wall_height)
 
-# Create interior walls
-interior_walls = create_rectangular_plan(house_length - wall_thickness, house_width - wall_thickness, 0)
-interior_wall_extrusion = rhino3dm.Extrusion.Create(interior_walls.ToPolylineCurve(), house_wall_height, True)
-model.Objects.AddExtrusion(interior_wall_extrusion)
+model.Objects.AddExtrusion(wall_1)
+model.Objects.AddExtrusion(wall_2)
+model.Objects.AddExtrusion(wall_3)
+model.Objects.AddExtrusion(wall_4)
 
 # Create loft
-loft = create_rectangular_plan(house_length, house_width * 0.5, house_wall_height - loft_height)
-model.Objects.AddCurve(loft.ToPolylineCurve())
+loft_points = [
+    rhino3dm.Point3d(0, house_width * 0.5, house_wall_height - loft_height),
+    rhino3dm.Point3d(house_length, house_width * 0.5, house_wall_height - loft_height)
+]
+loft_line = rhino3dm.LineCurve(loft_points[0], loft_points[1])
+model.Objects.AddLine(loft_points[0], loft_points[1])
 
 # Create roof
 roof_points = [
