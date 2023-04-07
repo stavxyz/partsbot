@@ -1,16 +1,5 @@
 import rhino3dm
 
-def create_wall(start_point, end_point, wall_thickness, wall_height):
-    points = [
-        start_point,
-        end_point,
-        rhino3dm.Point3d(end_point.X, end_point.Y - wall_thickness, 0),
-        rhino3dm.Point3d(start_point.X, start_point.Y - wall_thickness, 0),
-        start_point
-    ]
-    polyline = rhino3dm.Polyline(points)
-    return rhino3dm.Extrusion.Create(polyline.ToPolylineCurve(), wall_height, True)
-
 model = rhino3dm.File3dm()
 
 house_length = 40
@@ -24,15 +13,46 @@ layer = rhino3dm.Layer()
 layer.Name = "House"
 layer_index = model.Layers.Add(layer)
 
-# Create walls
-wall_1 = create_wall(rhino3dm.Point3d(0, house_width, 0), rhino3dm.Point3d(house_length, house_width, 0), wall_thickness, house_wall_height)
-wall_2 = create_wall(rhino3dm.Point3d(house_length, house_width, 0), rhino3dm.Point3d(house_length, 0, 0), wall_thickness, house_wall_height)
-wall_3 = create_wall(rhino3dm.Point3d(house_length, 0, 0), rhino3dm.Point3d(0, 0, 0), wall_thickness, house_wall_height)
-wall_4 = create_wall(rhino3dm.Point3d(0, 0, 0), rhino3dm.Point3d(0, house_width, 0), wall_thickness, house_wall_height)
-
 # Create attributes and set the layer index
 attributes = rhino3dm.ObjectAttributes()
 attributes.LayerIndex = layer_index
+
+# Create walls
+wall_1_points = [
+    rhino3dm.Point3d(0, house_width - wall_thickness, 0),
+    rhino3dm.Point3d(house_length, house_width - wall_thickness, 0),
+    rhino3dm.Point3d(house_length, house_width, 0),
+    rhino3dm.Point3d(0, house_width, 0),
+    rhino3dm.Point3d(0, house_width - wall_thickness, 0)
+]
+wall_1 = rhino3dm.Extrusion.Create(rhino3dm.Polyline(wall_1_points).ToPolylineCurve(), house_wall_height, True)
+
+wall_2_points = [
+    rhino3dm.Point3d(house_length - wall_thickness, house_width, 0),
+    rhino3dm.Point3d(house_length - wall_thickness, 0, 0),
+    rhino3dm.Point3d(house_length, 0, 0),
+    rhino3dm.Point3d(house_length, house_width, 0),
+    rhino3dm.Point3d(house_length - wall_thickness, house_width, 0)
+]
+wall_2 = rhino3dm.Extrusion.Create(rhino3dm.Polyline(wall_2_points).ToPolylineCurve(), house_wall_height, True)
+
+wall_3_points = [
+    rhino3dm.Point3d(house_length, 0 + wall_thickness, 0),
+    rhino3dm.Point3d(0, 0 + wall_thickness, 0),
+    rhino3dm.Point3d(0, 0, 0),
+    rhino3dm.Point3d(house_length, 0, 0),
+    rhino3dm.Point3d(house_length, 0 + wall_thickness, 0)
+]
+wall_3 = rhino3dm.Extrusion.Create(rhino3dm.Polyline(wall_3_points).ToPolylineCurve(), house_wall_height, True)
+
+wall_4_points = [
+    rhino3dm.Point3d(0 + wall_thickness, house_width, 0),
+    rhino3dm.Point3d(0 + wall_thickness, 0, 0),
+    rhino3dm.Point3d(0, 0, 0),
+    rhino3dm.Point3d(0, house_width, 0),
+    rhino3dm.Point3d(0 + wall_thickness, house_width, 0)
+]
+wall_4 = rhino3dm.Extrusion.Create(rhino3dm.Polyline(wall_4_points).ToPolylineCurve(), house_wall_height, True)
 
 model.Objects.AddExtrusion(wall_1, attributes)
 model.Objects.AddExtrusion(wall_2, attributes)
@@ -56,4 +76,3 @@ roof_line = rhino3dm.LineCurve(roof_points[0], roof_points[1])
 model.Objects.Add(roof_line, attributes)
 
 model.Write("rammed_earth_house.3dm", 5)
-
